@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  webserver1:
+    build: ./webserver1
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=mydb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secret
+    expose:
+      - "8000"
+    volumes:
+      - ./init_db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    depends_on:
+      - postgres
+
+  webserver2:
+    build: ./webserver2
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=mydb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=secret
+    expose:
+      - "8000"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - webserver1
+      - webserver2
+
+volumes:
+  postgres_data:
